@@ -2,6 +2,7 @@ package igrp.resource;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -22,6 +23,7 @@ public class OAuthAccessToken implements Serializable{
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Integer id;
 	
+	@Column(unique = true)
 	private String access_token;
 	
 	@ManyToOne(fetch = FetchType.EAGER)

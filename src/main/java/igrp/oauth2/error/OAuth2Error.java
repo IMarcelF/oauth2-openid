@@ -26,7 +26,7 @@ public enum OAuth2Error {
 	
 	ACCOUNT_NOT_AUTHORIZED(403, "The user has not authorized requesting Client ID (Consumer Key)."),
 	
-	INTERNAL_ERROR;
+	INTERNAL_ERROR(500, "Internal Server Error.");
 	
 	OAuth2Error(){}
 	

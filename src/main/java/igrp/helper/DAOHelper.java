@@ -14,7 +14,7 @@ public class DAOHelper {// Singleton class
 	
 	private static DAOHelper dao;
 	
-	private EntityManager em; // Just this object ... is enough
+	private EntityManager em; // Just this object ... is enough !!!
 	
 	private DAOHelper() {
 		Configuration conf = new Configuration().configure("igrp-rest.cfg.xml");

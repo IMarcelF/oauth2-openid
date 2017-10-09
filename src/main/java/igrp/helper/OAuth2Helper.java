@@ -10,6 +10,16 @@ public final class OAuth2Helper { // Not inherit ...
 	/*
 	 * * A set of public static methods ... **/
 	
+	// Proccess all oauth2 GET request 
+	public static void doGet() {
+		
+	}
+	
+	// Proccess all oauth2 POST request
+	public static void doPost() {
+		
+	}
+	
 	// OAuth2 response_type=code
 	public static void authorizationCodeGrant(String client_id, String scope, String redirect_uri) {
 		

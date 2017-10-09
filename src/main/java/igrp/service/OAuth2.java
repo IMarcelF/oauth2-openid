@@ -18,52 +18,37 @@ import igrp.resource.Employee;
 
 @Path("/oauth2")
 public class OAuth2 {
-
-	private static final Logger logger = Logger.getLogger(OAuth2.class);
-
-	@GET
-	@Path("/getSomething")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public Employee[] getSomething(@QueryParam("request") String request ,
-			 @DefaultValue("1") @QueryParam("version") int version) {
-		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Start getSomething");
-			logger.debug("data: '" + request + "'");
-			logger.debug("version: '" + version + "'");
-		}
 	
-		String response = null;
-
-        try{			
-            switch(version){
-	            case 1:
-	                if(logger.isDebugEnabled()) logger.debug("in version 1");
-
-	                response = "Response from Jersey Restful Webservice : " + request;
-                    break;
-                default: throw new Exception("Unsupported version: " + version);
-            }
-        }
-        catch(Exception e){
-        	response = e.getMessage().toString();
-        }
-        
-        if(logger.isDebugEnabled()){
-            logger.debug("result: '"+response+"'");
-            logger.debug("End getSomething");
-        }
-        Employee employee = new Employee();
-        employee.setCod(10);
-        employee.setName("IMF");
-        
-        Employee employee2 = new Employee();
-        employee2.setCod(11);
-        employee2.setName("IMF Fernandes");
-        
-        Employee list[] = new Employee[] {employee, employee2};
-        
-        return list;	
+	/**
+	 This method handle all oauth2 get request
+	 For response-type: "code" | "token"
+	 * */
+	@GET
+	@Path("/authorization")
+   // @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public void authorizationCodeOrImplicit(@QueryParam("request") String request){
+		
+	}
+	
+	/**
+	 The following methods handle all oauth2 post request ...
+	 For grant-type: "authorization-code" | "password" | "refresh_token" | "client_credentials"
+	 For two consumes media-type: "application/x-www-form-urlencoded" & "application/json"
+	 * */	
+	@POST
+	@Path("/token")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON) // Produce always json response
+	public void generateToken(@FormParam("request") String request) {
+		
+	}
+	
+	@POST
+	@Path("/token")
+	@Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON) // Produce always json response
+	public void generateToken() {
+		
 	}
 	
 }

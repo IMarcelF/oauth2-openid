@@ -10,14 +10,14 @@
 	    <property name = "hibernate.connection.password">root</property>
 	    
 	    <property name = "current_session_context_class">thread</property>
-	    <!-- <property name = "hibernate.hbm2ddl.auto">update</property> -->
+	    <property name = "hibernate.hbm2ddl.auto">update</property>
 	
-		<mapping class="nosi.webapps.igrp.dao.User"/>
-		<mapping class="nosi.webapps.igrp.dao.OAuthAccessToken"/>
-		<mapping class="nosi.webapps.igrp.dao.OAuthClient"/>
-		<mapping class="nosi.webapps.igrp.dao.OAuthorizationCode"/>
-		<mapping class="nosi.webapps.igrp.dao.OAuthScope"/>
-		<mapping class="nosi.webapps.igrp.dao.OAuthRefreshToken"/>
+		<mapping class="igrp.resource.User"/>
+		<mapping class="igrp.resource.OAuthAccessToken"/>
+		<mapping class="igrp.resource.OAuthClient"/>
+		<mapping class="igrp.resource.OAuthorizationCode"/>
+		<mapping class="igrp.resource.OAuthScope"/>
+		<mapping class="igrp.resource.OAuthRefreshToken"/>
 		
 	</session-factory>
 </hibernate-configuration>

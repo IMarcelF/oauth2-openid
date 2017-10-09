@@ -11,6 +11,9 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 
+import igrp.resource.oauth.PostData;
+import igrp.resource.oauth.Token;
+
 @Path("/oauth2")
 public class OAuth2 {
 	
@@ -34,16 +37,30 @@ public class OAuth2 {
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON) // Produce always json response
-	public void generateToken(@FormParam("request") String request) {
+	public Token generateToken(
+			@FormParam("grant_type") String grant_type, // Required !!!
+			@FormParam("code") @DefaultValue("") String code,
+			@FormParam("redirect_uri")@DefaultValue("") String redirect_uri, 
+			@FormParam("scope")@DefaultValue("") String scope, 
+			@FormParam("username")@DefaultValue("") String username, 
+			@FormParam("password")@DefaultValue("") String password,
+			@FormParam("refresh_token")@DefaultValue("") String refresh_token, 
+			@FormParam("client_id")@DefaultValue("") String client_id, 
+			@FormParam("client_secret")@DefaultValue("") String client_secret
+			) {
 		
+		//insert your code here
+		
+		return new Token();
 	}
 	
 	@POST
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON) // Produce always json response
-	public void generateToken() {
-		
+	public Token generateToken(PostData data) {
+		//insert your code here
+		return new Token();
 	}
 	
 }

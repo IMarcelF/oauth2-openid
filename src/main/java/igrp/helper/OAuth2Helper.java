@@ -112,6 +112,7 @@ public final class OAuth2Helper { // Not inherit ...
 			return new Error(OAuth2Error.INVALID_CLIENT_SECRET.name(), OAuth2Error.INVALID_CLIENT_SECRET.getDescription());
 		
 		OAuthAccessToken accessToken;
+		
 		OAuthRefreshToken refreshToken;
 		
 		return result;
@@ -136,5 +137,17 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	private static String generateRefreshToken() {
 		return java.util.UUID.randomUUID().toString().replaceAll("-", "");
+	}
+	
+	private static String generateTokenExpires() {
+		return "" + (System.currentTimeMillis() + 1000*3600); // 1h
+	}
+	
+	private static String generatetRefreshTokenExpires() {
+		return "" + (System.currentTimeMillis() + 1000*3600*24*7); // a week
+	}
+	
+	private static String getExpiresIn(OAuthAccessToken accessToken) {
+		return "" + ((Long.parseLong(accessToken.getExpires()) - System.currentTimeMillis())/1000);
 	}
 }

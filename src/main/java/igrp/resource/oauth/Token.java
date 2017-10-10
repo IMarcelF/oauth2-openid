@@ -1,7 +1,6 @@
 package igrp.resource.oauth;
 
 import java.io.Serializable;
-
 /**
  * @author Marcel Iekiny
  * Oct 9, 2017

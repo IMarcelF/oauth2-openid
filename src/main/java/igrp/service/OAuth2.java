@@ -11,6 +11,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 
+import igrp.helper.OAuth2Helper;
 import igrp.resource.oauth.PostData;
 import igrp.resource.oauth.Token;
 
@@ -23,9 +24,13 @@ public class OAuth2 {
 	 * */
 	@GET
 	@Path("/authorization")
-   // @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-	public void authorizationCodeOrImplicit(@QueryParam("request") String request){
-		
+	public void authorizationCodeOrImplicit(
+				@QueryParam("response_type") String response_type,
+				@QueryParam("client_id") String client_id,
+				@QueryParam("scope")@DefaultValue("") String scope,
+				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri
+			){
+		//...
 	}
 	
 	/**
@@ -48,9 +53,7 @@ public class OAuth2 {
 			@FormParam("client_id")@DefaultValue("") String client_id, 
 			@FormParam("client_secret")@DefaultValue("") String client_secret
 			) {
-		
-		//insert your code here
-		
+		Object result = OAuth2Helper.doPost(new PostData(grant_type, code, redirect_uri, scope, username, password, refresh_token, client_id, client_secret));
 		return new Token();
 	}
 	
@@ -59,7 +62,7 @@ public class OAuth2 {
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON) // Produce always json response
 	public Token generateToken(PostData data) {
-		//insert your code here
+		Object result = OAuth2Helper.doPost(data);
 		return new Token();
 	}
 	

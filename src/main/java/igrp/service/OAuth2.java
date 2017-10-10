@@ -9,6 +9,8 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.log4j.Logger;
 
 import igrp.helper.OAuth2Helper;
@@ -24,13 +26,13 @@ public class OAuth2 {
 	 * */
 	@GET
 	@Path("/authorization")
-	public void authorizationCodeOrImplicit(
+	public Response authorizationCodeOrImplicit(
 				@QueryParam("response_type") String response_type,
 				@QueryParam("client_id") String client_id,
 				@QueryParam("scope")@DefaultValue("") String scope,
 				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri
 			){
-		//...
+		return OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri);
 	}
 	
 	/**

@@ -1,5 +1,12 @@
 package igrp.helper;
 
+import java.net.URISyntaxException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+
+import javax.ws.rs.core.Response;
+
 import igrp.oauth2.error.OAuth2Error;
 import igrp.resource.oauth.PostData;
 import igrp.resource.oauth.Error;
@@ -11,20 +18,35 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	private OAuth2Helper() {} // Not instantiate ...
 	
-	/** A set of public static methods ... **/
+	/** A set of public static fields ... **/
+	public static String idpUrl = "http://localhost:8080/IGRP/webapps?r=igrp/login/login"; // In this case use IGRP-Framework login page
 	
+	/** A set of public static methods ... **/
 	// Proccess all oauth2 GET request 
-	public static Object doGet(String client_id, String response_type, String scope, String redirect_uri) {
-		Object result = null;
+	public static Response doGet(String client_id, String response_type, String scope, String redirect_uri) {
+		String url = OAuth2Helper.idpUrl + "&oauth=1";
 		if(response_type == null || response_type.isEmpty()) {
-			return result;
+			return Response.status(400).build();
 		}
 		switch(response_type) {
-			case "code":
-			case "token": break;
-			default: break;
+			case "code": 
+			case "token": 
+				url += (response_type != null && !response_type.isEmpty() ? "&response_type=" + response_type : "");
+				url += (client_id != null && !client_id.isEmpty() ? "&client_id=" + client_id : "");
+			try {
+				url += (redirect_uri != null && !redirect_uri.isEmpty() ? "&redirect_uri=" + URLEncoder.encode(redirect_uri, "utf-8") : "");
+			} catch (UnsupportedEncodingException e1) {
+				e1.printStackTrace();
+			}
+				url += (scope != null && !scope.isEmpty() ? "&scope=" + scope : "");
+			try {
+				return Response.temporaryRedirect(new URI(url)).build();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+			default:// Do nothing yet ...
 		}
-		return result;
+		return Response.status(400).build();
 	}
 	
 	// Proccess all oauth2 POST request

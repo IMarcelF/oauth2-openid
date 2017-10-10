@@ -63,10 +63,14 @@ public final class OAuth2Helper { // Not inherit ...
 			switch(data.getGrant_type()) {
 			
 				case "authorization_code":break;
-				case "password": result = resourceOwnerPasswordGrant(data.getUsername(), data.getPassword(), data.getClient_id(), 
-											data.getClient_secret(), data.getScope()); break;
 				
-				case "refresh_token":break;
+				case "password": 
+					result = resourceOwnerPasswordGrant(data.getUsername(), data.getPassword(), data.getClient_id(),data.getClient_secret(), data.getScope());
+				break;
+				
+				case "refresh_token":
+					result = refreshToken(data.getRefresh_token(), data.getScope(), data.getClient_id(),data.getClient_secret());
+				break;
 				
 				case "client_credentials": // Not set yet
 				default: result = new Error(OAuth2Error.UNSUPPORTED_GRANT_TYPE.name(), OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription()); break;

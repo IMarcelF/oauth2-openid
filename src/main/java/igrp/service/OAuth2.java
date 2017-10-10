@@ -14,8 +14,9 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 
 import igrp.helper.OAuth2Helper;
+import igrp.oauth2.error.OAuth2Error;
 import igrp.resource.oauth.PostData;
-import igrp.resource.oauth.Token;
+import igrp.resource.oauth.Error;
 
 @Path("/oauth2")
 public class OAuth2 {
@@ -44,7 +45,7 @@ public class OAuth2 {
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON) // Produce always json response
-	public Token generateToken(
+	public Response generateToken(
 			@FormParam("grant_type") String grant_type, // Required !!!
 			@FormParam("code") @DefaultValue("") String code,
 			@FormParam("redirect_uri")@DefaultValue("") String redirect_uri, 
@@ -56,16 +57,26 @@ public class OAuth2 {
 			@FormParam("client_secret")@DefaultValue("") String client_secret
 			) {
 		Object result = OAuth2Helper.doPost(new PostData(grant_type, code, redirect_uri, scope, username, password, refresh_token, client_id, client_secret));
-		return new Token();
+		if(result instanceof Error) {
+			Error error = (Error) result;
+			int status = OAuth2Error.valueOf(error.getError()).getStatus();
+		return Response.status(status).entity(error).build();
+		}
+		return Response.status(200).entity(result).build();
 	}
 	
 	@POST
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON) // Produce always json response
-	public Token generateToken(PostData data) {
+	public Response generateToken(PostData data) {
 		Object result = OAuth2Helper.doPost(data);
-		return new Token();
+		if(result instanceof Error) {
+			Error error = (Error) result;
+			int status = OAuth2Error.valueOf(error.getError()).getStatus();
+		return Response.status(status).entity(error).build();
+		}
+		return Response.status(200).entity(result).build();
 	}
 	
 }

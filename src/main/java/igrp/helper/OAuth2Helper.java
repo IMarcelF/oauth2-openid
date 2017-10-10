@@ -9,6 +9,10 @@ import javax.ws.rs.core.Response;
 
 import igrp.oauth2.error.OAuth2Error;
 import igrp.resource.oauth.PostData;
+import igrp.resource.OAuthAccessToken;
+import igrp.resource.OAuthClient;
+import igrp.resource.OAuthRefreshToken;
+import igrp.resource.User;
 import igrp.resource.oauth.Error;
 /**
  * @author Marcel Iekiny
@@ -23,7 +27,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	/** A set of public static methods ... **/
 	// Proccess all oauth2 GET request 
-	public static Response doGet(String client_id, String response_type, String scope, String redirect_uri) {
+	public static Object doGet(String client_id, String response_type, String scope, String redirect_uri) {
 		String url = OAuth2Helper.idpUrl + "&oauth=1";
 		if(response_type == null || response_type.isEmpty()) {
 			return Response.status(400).build();
@@ -56,8 +60,8 @@ public final class OAuth2Helper { // Not inherit ...
 			switch(data.getGrant_type()) {
 			
 				case "authorization_code":break;
-				
-				case "password":break;
+				case "password": result = resourceOwnerPasswordGrant(data.getUsername(), data.getPassword(), data.getClient_id(), 
+											data.getClient_secret(), data.getScope()); break;
 				
 				case "refresh_token":break;
 				
@@ -86,8 +90,30 @@ public final class OAuth2Helper { // Not inherit ...
 	}
 	
 	// OAuth2 grant_type=password
-	public static Object resourceOwnerPasswordGrant(String username, String password, String client_id, String client_secret, String scope) {
-		Object result = null;
+	public static Object resourceOwnerPasswordGrant(String username, String password, String client_id, String client_secret, String scope) { 
+		Object result = new Error(OAuth2Error.INTERNAL_ERROR.name(), OAuth2Error.INTERNAL_ERROR.getDescription()); // Default error
+		
+		User user = null;
+		try {
+			user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+		}catch(Exception e) {
+			return new Error(OAuth2Error.INTERNAL_ERROR.name(), OAuth2Error.INTERNAL_ERROR.getDescription());
+		}
+		if(!user.getPass_hash().equals(password))
+			return new Error(OAuth2Error.INTERNAL_ERROR.name(), OAuth2Error.INTERNAL_ERROR.getDescription());
+				
+		OAuthClient client = null;
+		try {
+			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+		}catch(Exception e) {
+			return new Error(OAuth2Error.INVALID_CLIENT.name(), OAuth2Error.INVALID_CLIENT.getDescription());
+		}
+		if(!client.getClient_secret().equals(client_secret))
+			return new Error(OAuth2Error.INVALID_CLIENT_SECRET.name(), OAuth2Error.INVALID_CLIENT_SECRET.getDescription());
+		
+		OAuthAccessToken accessToken;
+		OAuthRefreshToken refreshToken;
+		
 		return result;
 	}
 	
@@ -101,5 +127,14 @@ public final class OAuth2Helper { // Not inherit ...
 	public static Object refreshToken(String refresh_token, String scope, String client_id, String client_secret) {
 		Object result = null;
 		return result;
+	}
+	
+	/** Aux. algorithm **/
+	private static String generateAccessToken() {
+		return java.util.UUID.randomUUID().toString().replaceAll("-", "");
+	}
+	
+	private static String generateRefreshToken() {
+		return java.util.UUID.randomUUID().toString().replaceAll("-", "");
 	}
 }

@@ -32,7 +32,7 @@ public class OAuth2 {
 				@QueryParam("scope")@DefaultValue("") String scope,
 				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri
 			){
-		return OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri);
+		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri);
 	}
 	
 	/**

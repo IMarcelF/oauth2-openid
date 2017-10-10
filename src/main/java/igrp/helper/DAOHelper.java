@@ -24,11 +24,11 @@ public class DAOHelper {// Singleton class
 		this.em = emf.createEntityManager();
 	}
 	
-	public EntityManager geEntityManager() {
+	public EntityManager getEntityManager() {
 		return this.em;
 	}
 	
-	public DAOHelper getInstance() {
+	public static DAOHelper getInstance() {
 		if(DAOHelper.dao == null)
 			DAOHelper.dao = new DAOHelper();
 		return DAOHelper.dao;

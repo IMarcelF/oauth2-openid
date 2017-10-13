@@ -2,6 +2,8 @@ package igrp.resource.oauth;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Marcel Iekiny
  * Oct 9, 2017
@@ -10,13 +12,21 @@ import java.io.Serializable;
 public class PostData implements Serializable{// For serialize and deserialize purpose
 	
 	private String grant_type;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String code;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String redirect_uri;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String scope;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String username;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String password;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String refresh_token;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String client_id;
+	//@JsonIgnoreProperties(ignoreUnknown = true)
 	private String client_secret;
 	
 	public PostData() {}

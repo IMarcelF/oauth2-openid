@@ -31,9 +31,10 @@ public class OAuth2 {
 				@QueryParam("response_type") String response_type,
 				@QueryParam("client_id") String client_id,
 				@QueryParam("scope")@DefaultValue("") String scope,
-				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri
+				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri,
+				@QueryParam("authorize")@DefaultValue("") String authorize
 			){
-		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri);
+		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize);
 	}
 	
 	/**
@@ -78,5 +79,4 @@ public class OAuth2 {
 		}
 		return Response.status(200).entity(result).build();
 	}
-	
 }

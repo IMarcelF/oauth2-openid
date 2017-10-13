@@ -5,6 +5,7 @@ package igrp.oauth2.error;
  */
 public enum OAuth2Error {
 	
+	// For "BAD REQUEST"
 	UNSUPPORTED_OVER_HTTP(400, "OAuth 2.0 only supports calls over HTTPS."),
 	VERSION_REJECTED(400, "An unsupported version of OAuth was supplied."),
 	PARAMETER_ABSENT(400, "A required parameter is missing from the request."),
@@ -18,11 +19,18 @@ public enum OAuth2Error {
 	INVALID_PARAM(400, "A provided request parameter is invalid."),
 	INVALID_REFRESH_TOKEN(400, "The provided refresh token is invalid."),
 	
+	INVALID_USER(400, "An invalid User was provided."),
+	INVALID_SCOPE(400, "An invalid Scope was provided."),
+	INVALID_AUTHORIZATION_CODE(400, "An invalid or expired authorization_code was provided."),
+	
+	// For "UNAUTHORIZED REQUEST"
 	TOKEN_EXPIRED(401, "The provided refresh token has expired."),
 	INVALID_CALLBACK(401,"The redirect_uri provided with this request uses an unsupported port or does not match the Client ID (Consumer Key)."),
 	UNDERAGE_USER(401, "The user who must authorize access is a minor and cannot authorize access."),
 	INVALID_CLIENT_SECRET(401, "An invalid Client Secret was provided."),
 	INVALID_GRANT(401, "An invalid or expired token was provided."),
+	
+	INVALID_USER_CREDENTIALS(401, "An invalid User credentials was provided."),
 	
 	ACCOUNT_NOT_AUTHORIZED(403, "The user has not authorized requesting Client ID (Consumer Key)."),
 	

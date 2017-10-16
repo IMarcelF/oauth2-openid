@@ -97,144 +97,141 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 response_type=code
 	public static Response authorizationCodeGrant(String client_id, String scope, String redirect_uri) {
-		String username = "demo";
+		String username = "demo"; // eliminar
 		String url = "";
+		String queryString = "";
+		boolean die = false;
 		User user = null;
-		String  error = null;
-		
 		OAuthClient client = null;
+		
 		try {
 			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
-			error = "error=INTERNAL_ERROR";
+			die = true;
+			queryString = "?error=" + OAuth2Error.INVALID_CLIENT;
 			e.printStackTrace();
 		}
 		url += (client == null || (redirect_uri != null && !redirect_uri.isEmpty()) ? redirect_uri : client.getRedirect_uri());
 		
-		if(error != null) {
-			url += "?" + error;
+		if(!die && client != null && !validateScope(scope, client)) {
+			queryString = "?error=" + OAuth2Error.INVALID_SCOPE;
+			die = true;
+		}
+		
+		if(!die) {
 			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-				return Response.status(400).build();
+				user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+			}catch(Exception e) {
+				die = true;
+				e.printStackTrace(); // For log
+				queryString = "?error=" + OAuth2Error.INVALID_USER;
 			}
 		}
-		if(client != null && !validateScope(scope, client)) {
-			url += "?" + error;
-			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-				return Response.status(400).build();
-			}
+		
+		if(!die) {
+			OAuthorizationCode code = new OAuthorizationCode();
+			code.setUser(user);
+			code.setAuthClient(client);
+			code.setAuthorization_code(generateAuthorizationCode());
+			if(redirect_uri != null && !redirect_uri.isEmpty())
+				code.setRedirect_uri(redirect_uri);
+			code.setExpires(generateCodeExpires());
+			code.setScope(scope);
+			
+			DAOHelper.getInstance().getEntityManager().getTransaction().begin();
+			DAOHelper.getInstance().getEntityManager().persist(code);
+			DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+			
+			queryString = "?code=" + code.getAuthorization_code();
 		}
 		
 		try {
-			user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
-		}catch(Exception e) {
-			e.printStackTrace(); // For log
-			error = "error=INTERNAL_ERROR";
-			url += "?" + error;
-			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e1) {
-				e1.printStackTrace();
-				return Response.status(400).build();
-			}
-		}
-		
-		OAuthorizationCode code = new OAuthorizationCode();
-		code.setUser(user);
-		code.setAuthClient(client);
-		code.setAuthorization_code(generateAuthorizationCode());
-		if(redirect_uri != null && !redirect_uri.isEmpty())
-			code.setRedirect_uri(redirect_uri);
-		code.setExpires(generateCodeExpires());
-		code.setScope(scope);
-		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(code);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
-		
-		url += "?code=" + code.getAuthorization_code();
-		
-		try {
+			url += queryString;
 			return Response.temporaryRedirect(new URI(url)).build();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
+		
 	return Response.status(400).build();
 	}
 	
 	// OAuth2 response_type=token & grant_type=implicit
 	public static Object implicitGrant(String client_id, String scope, String redirect_uri) {
-		String username = "demo";
+		String username = "demo"; // Eliminar
 		String url = "";
+		String queryString = "";
+		boolean die = false;
 		User user = null;
-		String  error = null;
-		
 		OAuthClient client = null;
+		
 		try {
 			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
-			error = "error=INTERNAL_ERROR";
+			die = true;
+			queryString = "#error=" + OAuth2Error.INVALID_CLIENT;
 			e.printStackTrace();
 		}
 		url += (client == null || (redirect_uri != null && !redirect_uri.isEmpty()) ? redirect_uri : client.getRedirect_uri());
 		
-		if(error != null) {
-			url += "#" + error;
+		if(!die && client != null && !validateScope(scope, client)) {
+			queryString = "#error=" + OAuth2Error.INVALID_SCOPE;
+			die = true;
+		}
+		
+		if(!die) {
 			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-				return Response.status(400).build();
+				user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+			}catch(Exception e) {
+				die = true;
+				e.printStackTrace(); // For log
+				queryString = "#error=" + OAuth2Error.INVALID_USER;
 			}
 		}
-		if(client != null && !validateScope(scope, client)) {
-			url += "#" + error;
+		
+		if(!die) {
+			/** Reuse the existing token if it is alive ... **/
+			OAuthAccessToken token = null;
+			boolean generateNewToken = false;
 			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e) {
+				token = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+						setParameter("_c", client.getClient_id()).
+						setParameter("_s", scope).
+						setParameter("_u", user.getId()).
+						setMaxResults(1).
+						getSingleResult();
+			
+				if(token.getExpires().compareTo(System.currentTimeMillis() + "") <= 0)
+					generateNewToken = true;
+					
+			}catch(Exception e) {
 				e.printStackTrace();
-				return Response.status(400).build();
+				generateNewToken = true;
+				// Go ahead ...
 			}
+			
+			if(generateNewToken) {
+				/** Otherwise generate new token **/
+				token = new OAuthAccessToken(); 
+				token.setAccess_token(generateAccessToken());
+				token.setExpires(generateTokenExpires());
+				token.setAuthClient(client);
+				token.setUser(user);
+				token.setScope(scope);
+				
+				DAOHelper.getInstance().getEntityManager().getTransaction().begin();
+				DAOHelper.getInstance().getEntityManager().persist(token);
+				DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+			}
+			
+			queryString = "#token=" + token.getAccess_token();
 		}
 		
 		try {
-			user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
-		}catch(Exception e) {
-			e.printStackTrace(); // For log
-			error = "error=INTERNAL_ERROR";
-			url += "#" + error;
-			try {
-				return Response.temporaryRedirect(new URI(url)).build();
-			} catch (URISyntaxException e1) {
-				e1.printStackTrace();
-				return Response.status(400).build();
-			}
-		}
-		
-		OAuthAccessToken token = new OAuthAccessToken(); 
-		token.setAccess_token(generateAccessToken());
-		token.setExpires(generateTokenExpires());
-		token.setAuthClient(client);
-		token.setUser(user);
-		token.setScope(scope);
-		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(token);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
-		
-		url += "#token=" + token.getAccess_token();
-		
-		try {
+			url += queryString;
 			return Response.temporaryRedirect(new URI(url)).build();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-		
 		return Response.status(400).build();
 	}
 	
@@ -282,7 +279,8 @@ public final class OAuth2Helper { // Not inherit ...
 					setMaxResults(1).
 					getSingleResult();
 			
-			return generateOAuth2Token(accessToken, refreshToken);
+			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0)
+				return generateOAuth2Token(accessToken, refreshToken);
 			
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -336,14 +334,39 @@ public final class OAuth2Helper { // Not inherit ...
 		if(!validateScope(scope, client))
 			return new Error(OAuth2Error.INVALID_SCOPE.name(), OAuth2Error.INVALID_SCOPE.getDescription());
 		
-		OAuthAccessToken accessToken = new OAuthAccessToken();
+		OAuthAccessToken accessToken = null;
+		OAuthRefreshToken refreshToken = null;
+		try { // reuse existing token 
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+					setParameter("_c",client.getClient_id()).
+					setParameter("_s", (scope == null || scope.isEmpty() ? client.getScope() : scope)).
+					setParameter("_u", user.getId()).
+					setMaxResults(1).
+					getSingleResult();
+			
+			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthRefreshToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+					setParameter("_c", client.getClient_id()).
+					setParameter("_s", accessToken.getScope()).
+					setParameter("_u", user.getId()).
+					setMaxResults(1).
+					getSingleResult();
+			
+			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0)
+				return generateOAuth2Token(accessToken, refreshToken);
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+			// Go ahead ...
+		}
+		
+		accessToken = new OAuthAccessToken();
 		accessToken.setAccess_token(generateAccessToken());
 		accessToken.setExpires(generateTokenExpires());
 		accessToken.setAuthClient(client);
 		accessToken.setUser(user);
 		accessToken.setScope((scope == null || scope.isEmpty() ? client.getScope() : scope));
 		
-		OAuthRefreshToken refreshToken = new OAuthRefreshToken();
+		refreshToken = new OAuthRefreshToken();
 		refreshToken.setRefresh_token(generateRefreshToken());
 		refreshToken.setAuthClient(client);
 		refreshToken.setUser(user);

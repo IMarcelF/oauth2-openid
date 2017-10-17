@@ -1,10 +1,14 @@
 package igrp.resource.oauth;
 
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * @author Marcel Iekiny
  * Oct 9, 2017
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Token implements Serializable{ // For serialize and deserialize purpose
 	
 	private String access_token;

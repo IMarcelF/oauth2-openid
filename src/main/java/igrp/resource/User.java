@@ -21,7 +21,7 @@ public class User implements Serializable{
 	private String name;
 	@Column(unique=true)
 	private String email;
-	private String pass_hash; // Apply md5 or sha1 ... I dont know yet ?????
+	private String pass_hash; // Apply md5 or sha1 ... 
 	private String userProfile;
 	private String valid_until; // Date type
 	private int status;

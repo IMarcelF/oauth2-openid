@@ -396,7 +396,25 @@ public final class OAuth2Helper { // Not inherit ...
 		if(!validateScope(scope, client))
 			return new Error(OAuth2Error.INVALID_SCOPE.name(), OAuth2Error.INVALID_SCOPE.getDescription());
 		
-		OAuthAccessToken accessToken = new OAuthAccessToken();
+		OAuthAccessToken accessToken = null;
+		/** Reuse existing token if it is alive ... **/
+		try {
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+					setParameter("_c",client.getClient_id()).
+					setParameter("_s", (scope == null || scope.isEmpty() ? client.getScope() : scope)).
+					setParameter("_u",client.getUser().getId()).
+					setMaxResults(1).
+					getSingleResult();
+			
+			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0)
+				return generateOAuth2Token(accessToken);
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+			// Go ahead ...
+		}
+		/** Otherwise generate a new token **/
+		accessToken = new OAuthAccessToken();
 		accessToken.setAccess_token(generateAccessToken());
 		accessToken.setExpires(generateTokenExpires());
 		accessToken.setAuthClient(client);

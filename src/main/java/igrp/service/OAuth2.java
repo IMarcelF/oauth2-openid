@@ -23,7 +23,7 @@ public class OAuth2 {
 	
 	/**
 	 This method handle all oauth2 get request
-	 For response-type: "code" | "token"
+	 For response_type: "code" | "token"
 	 * */
 	@GET
 	@Path("/authorization")
@@ -39,7 +39,7 @@ public class OAuth2 {
 	
 	/**
 	 The following methods handle all oauth2 post request ...
-	 For grant-type: "authorization-code" | "password" | "refresh_token" | "client_credentials"
+	 For grant_type: "authorization_code" | "password" | "refresh_token" | "client_credentials"
 	 For two consumes media-type: "application/x-www-form-urlencoded" & "application/json"
 	 * */	
 	@POST

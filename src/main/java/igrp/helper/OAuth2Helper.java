@@ -32,6 +32,11 @@ public final class OAuth2Helper { // Not inherit ...
 	/** A set of public static methods ... **/
 	// Proccess all oauth2 GET request 
 	public static Object doGet(String client_id, String response_type, String scope, String redirect_uri, String authorize) {
+		/** Go to https://tools.ietf.org/html/rfc6749#section-3.3 for more details 
+		 *  Anyway, you can use scope as list of string separate by comma too
+		 */
+		scope = scope.replaceAll("(\\s|%20)", ",");
+		/***/
 		String url = OAuth2Helper.idpUrl + "&oauth=1";
 		if(response_type == null || response_type.isEmpty()) {
 			return Response.status(400).build();
@@ -68,6 +73,11 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// Proccess all oauth2 POST request
 	public static Object doPost(PostData data) {
+		/** Go to https://tools.ietf.org/html/rfc6749#section-3.3 for more details 
+		 *  Anyway, you can use scope as list of string separate by comma too
+		 */
+		data.setScope(data.getScope().replaceAll("(\\s|%20)", ","));
+		/***/
 		Object result = null;
 		if(data.getGrant_type() != null)
 			switch(data.getGrant_type()) {

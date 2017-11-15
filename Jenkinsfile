@@ -8,7 +8,7 @@ pipeline {
     }
     stage('Test') {
       steps {
-        build 'TesteMaven'
+        echo 'Testando...'
       }
     }
     stage('Deploy') {

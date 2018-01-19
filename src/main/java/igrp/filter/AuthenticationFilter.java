@@ -1,4 +1,4 @@
-package igrp.service;
+package igrp.filter;
 
 import java.io.IOException;
 import java.util.Base64;

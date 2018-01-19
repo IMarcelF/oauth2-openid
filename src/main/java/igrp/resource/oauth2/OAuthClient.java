@@ -1,4 +1,4 @@
-package igrp.resource;
+package igrp.resource.oauth2;
 
 import java.io.Serializable;
 import java.util.List;
@@ -13,6 +13,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import igrp.resource.User;
 /**
  * Marcel Iekiny
  * Sep 16, 2017

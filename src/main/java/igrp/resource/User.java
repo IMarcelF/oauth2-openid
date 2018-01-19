@@ -26,7 +26,7 @@ public class User implements Serializable{
 	private String valid_until; // Date type
 	private int status;
 	private String remarks;
-	private int activation_key;
+	private String activation_key;
 	@Column(unique=true)
 	private String user_name;
 	private String photo_id;
@@ -41,7 +41,7 @@ public class User implements Serializable{
 	public User(){}
 	
 	public User(Integer id, String name, String email, String pass_hash, String userProfile, String valid_until,
-			int status, String remarks, int activation_key, String user_name, String photo_id, String signature_id,
+			int status, String remarks, String activation_key, String user_name, String photo_id, String signature_id,
 			String mobile, String phone, String password_reset_token, String auth_key, long created_at,
 			long updated_at) {
 		super();
@@ -113,10 +113,10 @@ public class User implements Serializable{
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
-	public int getActivation_key() {
+	public String getActivation_key() {
 		return activation_key;
 	}
-	public void setActivation_key(int activation_key) {
+	public void setActivation_key(String activation_key) {
 		this.activation_key = activation_key;
 	}
 	public String getUser_name() {
@@ -156,7 +156,7 @@ public class User implements Serializable{
 		this.password_reset_token = password_reset_token;
 	}
 	public String getAuth_key() {
-		return auth_key;
+		return auth_key; 
 	}
 	public void setAuth_key(String auth_key) {
 		this.auth_key = auth_key;
@@ -173,4 +173,15 @@ public class User implements Serializable{
 	public void setUpdated_at(long updated_at) {
 		this.updated_at = updated_at;
 	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", name=" + name + ", email=" + email + ", pass_hash=" + pass_hash + ", userProfile="
+				+ userProfile + ", valid_until=" + valid_until + ", status=" + status + ", remarks=" + remarks
+				+ ", activation_key=" + activation_key + ", user_name=" + user_name + ", photo_id=" + photo_id
+				+ ", signature_id=" + signature_id + ", mobile=" + mobile + ", phone=" + phone
+				+ ", password_reset_token=" + password_reset_token + ", auth_key=" + auth_key + ", created_at="
+				+ created_at + ", updated_at=" + updated_at + "]";
+	}
+	
 }

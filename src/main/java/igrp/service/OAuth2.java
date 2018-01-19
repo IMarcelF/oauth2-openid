@@ -13,10 +13,11 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 
+import igrp.helper.DAOHelper;
 import igrp.helper.OAuth2Helper;
 import igrp.oauth2.error.OAuth2Error;
-import igrp.resource.oauth.PostData;
-import igrp.resource.oauth.Error;
+import igrp.resource.oauth2.Error;
+import igrp.resource.oauth2.PostData;
 
 @Path("/oauth2")
 public class OAuth2 {
@@ -33,7 +34,7 @@ public class OAuth2 {
 				@QueryParam("scope")@DefaultValue("") String scope,
 				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri,
 				@QueryParam("authorize")@DefaultValue("") String authorize
-			){
+			){ DAOHelper.getInstance().getEntityManager();
 		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize);
 	}
 	
@@ -69,7 +70,7 @@ public class OAuth2 {
 	@POST
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON) // Produce always json response
+    @Produces(MediaType.APPLICATION_JSON) // Produce always json response 
 	public Response generateToken(PostData data) {
 		Object result = OAuth2Helper.doPost(data);
 		if(result instanceof Error) {

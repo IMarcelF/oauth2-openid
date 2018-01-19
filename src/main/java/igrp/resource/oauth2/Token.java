@@ -1,4 +1,4 @@
-package igrp.resource.oauth;
+package igrp.resource.oauth2;
 
 import java.io.Serializable;
 

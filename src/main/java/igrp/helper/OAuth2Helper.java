@@ -8,14 +8,14 @@ import java.net.URLEncoder;
 import javax.ws.rs.core.Response;
 
 import igrp.oauth2.error.OAuth2Error;
-import igrp.resource.oauth.PostData;
-import igrp.resource.oauth.Token;
-import igrp.resource.OAuthAccessToken;
-import igrp.resource.OAuthClient;
-import igrp.resource.OAuthRefreshToken;
-import igrp.resource.OAuthorizationCode;
 import igrp.resource.User;
-import igrp.resource.oauth.Error;
+import igrp.resource.oauth2.Error;
+import igrp.resource.oauth2.OAuthAccessToken;
+import igrp.resource.oauth2.OAuthClient;
+import igrp.resource.oauth2.OAuthRefreshToken;
+import igrp.resource.oauth2.OAuthorizationCode;
+import igrp.resource.oauth2.PostData;
+import igrp.resource.oauth2.Token;
 /**
  * @author Marcel Iekiny
  * Oct 4, 2017
@@ -76,7 +76,11 @@ public final class OAuth2Helper { // Not inherit ...
 		/** Go to https://tools.ietf.org/html/rfc6749#section-3.3 for more details 
 		 *  Anyway, you can use scope as list of string separate by comma too
 		 */
-		data.setScope(data.getScope().replaceAll("(\\s|%20)", ","));
+		try {
+			data.setScope(data.getScope().replaceAll("(\\s|%20)", ","));
+		}catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
 		/***/
 		Object result = null;
 		if(data.getGrant_type() != null)
@@ -328,6 +332,7 @@ public final class OAuth2Helper { // Not inherit ...
 			e.printStackTrace(); // For log
 			return new Error(OAuth2Error.INVALID_USER.name(), OAuth2Error.INVALID_USER.getDescription());
 		}
+		System.out.println(user);
 		if(!user.getPass_hash().equals(password))
 			return new Error(OAuth2Error.INVALID_USER_CREDENTIALS.name(), OAuth2Error.INVALID_USER_CREDENTIALS.getDescription());
 		

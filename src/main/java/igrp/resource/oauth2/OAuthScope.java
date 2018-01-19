@@ -1,4 +1,4 @@
-package igrp.resource;
+package igrp.resource.oauth2;
 
 import java.io.Serializable;
 import javax.persistence.Entity;

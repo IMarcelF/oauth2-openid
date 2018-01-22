@@ -548,7 +548,7 @@ public final class OAuth2Helper { // Not inherit ...
 		if(scopes == null || scopes.isEmpty()) 
 			return true; // scopes is optional in this case
 		String []aux = scopes.split(",");
-		for(String obj : aux)
+		for(String obj : aux) 
 			if(!accessToken.getScope().contains(obj))
 				return false;
 		return true;
@@ -570,4 +570,17 @@ public final class OAuth2Helper { // Not inherit ...
 		token.setToken_type(DEFAULT_TOKEN_TYPE);
 	return token;
 	}
+	
+	public static boolean isValidToken(String token, String scope /* A single scope */) {
+		OAuthAccessToken accessToken = null;
+		try {
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where access_token = :_t ORDER BY t.id desc").
+					setMaxResults(1).setParameter("_t", token).getSingleResult();
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return accessToken != null && accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && validateScope(scope, accessToken);
+	}
+	
 }

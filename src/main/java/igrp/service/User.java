@@ -34,7 +34,7 @@ public class User {
 			
 		}catch(Exception e) {
 			e.printStackTrace();
-			Error error = new Error("Exception_Occured", "The resource não foi encontrado.");
+			Error error = new Error("Exception_Occured", "The resource not found.");
 			genericResource.setSuccess(false);
 			genericResource.setData(error);
 			return Response.status(500).entity(genericResource).build();

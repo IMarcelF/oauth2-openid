@@ -35,6 +35,7 @@
         <property name="show_sql">true</property>
 	
 		<mapping class="igrp.resource.User"/>
+		<mapping class="igrp.resource.Session"/>
 		<mapping class="igrp.resource.oauth2.OAuthAccessToken"/>
 		<mapping class="igrp.resource.oauth2.OAuthClient"/>
 		<mapping class="igrp.resource.oauth2.OAuthorizationCode"/>

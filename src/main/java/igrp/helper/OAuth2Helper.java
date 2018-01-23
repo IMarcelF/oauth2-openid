@@ -572,6 +572,8 @@ public final class OAuth2Helper { // Not inherit ...
 	}
 	
 	public static boolean isValidToken(String token, String scope /* A single scope */) {
+		if(token == null || token.isEmpty()) return false;
+		token = token.replaceFirst(DEFAULT_TOKEN_TYPE + " ", ""); 
 		OAuthAccessToken accessToken = null;
 		try {
 			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where access_token = :_t ORDER BY t.id desc").

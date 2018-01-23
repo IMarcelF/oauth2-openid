@@ -11,7 +11,9 @@ import javax.ws.rs.core.Response;
 import igrp.helper.DAOHelper;
 import igrp.helper.OAuth2Helper;
 import igrp.oauth2.error.OAuth2Error;
+import igrp.oauth2.error.Scope;
 import igrp.resource.GenericResource;
+import igrp.resource.GenericResourceBuilder;
 import igrp.resource.Error;
 
 /**
@@ -27,49 +29,23 @@ public class User {
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response getUser(@PathParam(value = "id") String id, @HeaderParam(value = "Authorization") String token) {
 		
-		GenericResource genericResource = new GenericResource();
-		
-		// To valid the token (Begin) 
-		boolean die = false;
-		try {
-			token = token.split(" ")[1];
-				die = !OAuth2Helper.isValidToken(token, "login");
-		}catch(Exception e) {
-			die = true;
-		}
-		if(die) {
-			Error error = new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription());
-			genericResource.setSuccess(false);
-			genericResource.setData(error);
-			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(genericResource).build();
-		}
-		// To valid the token (End) 
+		if(!OAuth2Helper.isValidToken(token, Scope.USER_READ + "")) 
+			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(new GenericResourceBuilder(false, new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription())).build()).build(); 
 		
 		igrp.resource.User user = null;
-		
 		try {
-			//user = DAOHelper.getInstance().getEntityManager().find(igrp.resource.User.class, id);
 			user = (igrp.resource.User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
 			 .setParameter("_u", id).setParameter("_m", id)
 			 .setMaxResults(1)
 			 .getSingleResult();
-			
 		}catch(Exception e) {
 			e.printStackTrace();
-			Error error = new Error("Exception_Occured", "The resource n„o foi encontrado.");
-			genericResource.setSuccess(false);
-			genericResource.setData(error);
-			return Response.status(500).entity(genericResource).build();
+			return Response.status(500).entity(new GenericResourceBuilder(false, new Error("Exception_Occured", "The resource n√£o foi encontrado.")).build()).build();
 		}
-		if(user == null) {
-			Error error = new Error("404", "Resource not found.");
-			genericResource.setSuccess(false);
-			genericResource.setData(error);
-			return Response.status(404).entity(genericResource).build();
-		}
-		genericResource.setSuccess(true);
-		genericResource.setData(user);
-		return Response.status(200).entity(genericResource).build();
+		if(user == null) 
+			return Response.status(404).entity(new GenericResourceBuilder(false, new Error("404", "Resource not found.")).build()).build();
+		
+		return Response.status(200).entity(new GenericResourceBuilder(true, user).build()).build();
 	}
 	
 }

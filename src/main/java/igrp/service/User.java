@@ -15,6 +15,7 @@ import igrp.oauth2.error.Scope;
 import igrp.resource.GenericResource;
 import igrp.resource.GenericResourceBuilder;
 import igrp.resource.Error;
+import javax.persistence.EntityManager;
 
 /**
  * Marcel Iekiny
@@ -33,15 +34,20 @@ public class User {
 			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(new GenericResourceBuilder(false, new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription())).build()).build(); 
 		
 		igrp.resource.User user = null;
+                EntityManager em = DAOHelper.getInstance().getEntityManager();
 		try {
-			user = (igrp.resource.User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
+			user = (igrp.resource.User) em.createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
 			 .setParameter("_u", id).setParameter("_m", id)
 			 .setMaxResults(1)
 			 .getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return Response.status(500).entity(new GenericResourceBuilder(false, new Error("Exception_Occured", "The resource não foi encontrado.")).build()).build();
-		}
+		}finally{
+                    if(em != null){
+                        em.close();
+                    }
+                }
 		if(user == null) 
 			return Response.status(404).entity(new GenericResourceBuilder(false, new Error("404", "Resource not found.")).build()).build();
 		

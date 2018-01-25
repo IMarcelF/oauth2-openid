@@ -28,14 +28,14 @@ public class DAOHelper {// Singleton class
 		return this.em;
 	}
 	
-	public static DAOHelper getInstance() {
+	public synchronized static DAOHelper getInstance() {
 		if(DAOHelper.dao == null)
 			DAOHelper.dao = new DAOHelper();
 		return DAOHelper.dao;
 	}
 	
 	public void closeAllConnection() {
-		em.close();
 		em.getEntityManagerFactory().close();
+		em.close();
 	}
 }

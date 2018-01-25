@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 /**
  * Iekiny Marcel
  * Jan 23, 2018
@@ -34,10 +35,16 @@ public class Session implements Serializable{
 	private String host;
 	private String hostName;
 	private String mediaType;
+	private String url;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="user_fk",foreignKey=@ForeignKey(name="SESSION_USER_FK"))
 	private User user;
+	
+	@Transient
+	private String homeUrl;
+	@Transient
+	private String loginUrl;
 	
 	public Session(){}
 
@@ -144,5 +151,29 @@ public class Session implements Serializable{
 	public void setUser(User user) {
 		this.user = user;
 	}
-		
+
+	public String getHomeUrl() {
+		return homeUrl;
+	}
+
+	public void setHomeUrl(String homeUrl) {
+		this.homeUrl = homeUrl;
+	}
+
+	public String getLoginUrl() {
+		return loginUrl;
+	}
+
+	public void setLoginUrl(String loginUrl) {
+		this.loginUrl = loginUrl;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
 }

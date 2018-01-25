@@ -14,28 +14,25 @@ public class DAOHelper {// Singleton class
 	
 	private static DAOHelper dao;
 	
-	private EntityManager em; // Just this object ... is enough !!!
+	private EntityManagerFactory emf; // Just this object ... is enough !!!
 	
 	private DAOHelper() {
 		Configuration conf = new Configuration().configure("igrp-rest.cfg.xml");
-		SessionFactory sf =  conf.buildSessionFactory();
-		Session session = sf.openSession();
-		EntityManagerFactory emf = session.getEntityManagerFactory();
-		this.em = emf.createEntityManager();
+		//this slould be safe because SessionFactory implements EntityManagerFactory
+                this.emf = (EntityManagerFactory) conf.buildSessionFactory();
 	}
 	
 	public EntityManager getEntityManager() {
-		return this.em;
+		return this.emf.createEntityManager();
 	}
 	
-	public synchronized static DAOHelper getInstance() {
+	public static DAOHelper getInstance() {
 		if(DAOHelper.dao == null)
 			DAOHelper.dao = new DAOHelper();
 		return DAOHelper.dao;
 	}
 	
 	public void closeAllConnection() {
-		em.getEntityManagerFactory().close();
-		em.close();
+		this.emf.close();
 	}
 }

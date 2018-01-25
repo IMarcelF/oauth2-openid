@@ -30,9 +30,9 @@ public class Session {
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response getSession(@PathParam(value = "id") String id, @HeaderParam(value = "Authorization") String token) {
 		
-		if(!OAuth2Helper.isValidToken(token, Scope.SESSION_READ + "")) 
+	/*	if(!OAuth2Helper.isValidToken(token, Scope.SESSION_READ + "")) 
 			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(new GenericResourceBuilder(false, new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription())).build()).build(); 
-		
+		*/
 		StringTokenizer t = new StringTokenizer(id, ":");
 		String pk = null;
 		String sessionId = null;

@@ -1,4 +1,4 @@
-package igrp.oauth2.error;
+package igrp.oauth2.util;
 /**
  * @author Marcel Iekiny
  * Oct 6, 2017

@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 
 import igrp.helper.DAOHelper;
 import igrp.helper.OAuth2Helper;
-import igrp.oauth2.error.OAuth2Error;
+import igrp.oauth2.util.OAuth2Error;
 import igrp.resource.oauth2.Error;
 import igrp.resource.oauth2.PostData;
 

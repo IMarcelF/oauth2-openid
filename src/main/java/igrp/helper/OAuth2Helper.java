@@ -7,7 +7,7 @@ import java.net.URLEncoder;
 
 import javax.ws.rs.core.Response;
 
-import igrp.oauth2.error.OAuth2Error;
+import igrp.oauth2.util.OAuth2Error;
 import igrp.resource.User;
 import igrp.resource.oauth2.Error;
 import igrp.resource.oauth2.OAuthAccessToken;

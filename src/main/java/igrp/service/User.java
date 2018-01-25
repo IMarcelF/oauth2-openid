@@ -10,8 +10,8 @@ import javax.ws.rs.core.Response;
 
 import igrp.helper.DAOHelper;
 import igrp.helper.OAuth2Helper;
-import igrp.oauth2.error.OAuth2Error;
-import igrp.oauth2.error.Scope;
+import igrp.oauth2.util.OAuth2Error;
+import igrp.oauth2.util.Scope;
 import igrp.resource.GenericResource;
 import igrp.resource.GenericResourceBuilder;
 import igrp.resource.Error;

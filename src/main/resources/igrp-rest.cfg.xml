@@ -33,6 +33,19 @@
         <property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
         <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>
+        
+        <property name="hibernate.c3p0.min_size">5</property>
+        <property name="hibernate.c3p0.max_size">20</property>
+        <property name="hibernate.c3p0.timeout">6000</property>
+        <property name="hibernate.c3p0.max_statements">50</property>
+        <property name="hibernate.c3p0.idle_test_period">3000</property>
+       
+        <!-- Go to http://www.mchange.com/projects/c3p0/#configuring_to_debug_and_workaround_broken_clients 
+        	 For memory leak prevention and bad clients ...  --> 
+        <property name="hibernate.c3p0.unreturnedConnectionTimeout">300</property> <!-- 300 seconds -->  
+        <property name="hibernate.c3p0.debugUnreturnedConnectionStackTraces">true</property>
+        <property name="hibernate.c3p0.contextClassLoaderSource">library</property>
+        <property name="hibernate.c3p0.privilegeSpawnedThreads">true</property>
 	
 		<mapping class="igrp.resource.User"/>
 		<mapping class="igrp.resource.Session"/>
@@ -43,4 +56,5 @@
 		<mapping class="igrp.resource.oauth2.OAuthRefreshToken"/>
 		
 	</session-factory>
+	
 </hibernate-configuration>

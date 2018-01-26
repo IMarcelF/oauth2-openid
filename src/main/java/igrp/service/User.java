@@ -34,7 +34,7 @@ public class User {
 			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(new GenericResourceBuilder(false, new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription())).build()).build(); 
 		
 		igrp.resource.User user = null;
-                EntityManager em = DAOHelper.getInstance().getEntityManager();
+                EntityManager em = DAOHelper.getInstance().getSession();
 		try {
 			user = (igrp.resource.User) em.createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
 			 .setParameter("_u", id).setParameter("_m", id)

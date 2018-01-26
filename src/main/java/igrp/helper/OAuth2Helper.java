@@ -119,7 +119,7 @@ public final class OAuth2Helper { // Not inherit ...
 		OAuthClient client = null;
 		
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			die = true;
 			queryString = "?error=" + OAuth2Error.INVALID_CLIENT;
@@ -134,7 +134,7 @@ public final class OAuth2Helper { // Not inherit ...
 		
 		if(!die) {
 			try {
-				user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+				user = (User) DAOHelper.getInstance().getSession().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
 			}catch(Exception e) {
 				die = true;
 				e.printStackTrace(); // For log
@@ -152,9 +152,9 @@ public final class OAuth2Helper { // Not inherit ...
 			code.setExpires(generateCodeExpires());
 			code.setScope(scope);
 			
-			DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-			DAOHelper.getInstance().getEntityManager().persist(code);
-			DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+			DAOHelper.getInstance().getSession().beginTransaction();
+			DAOHelper.getInstance().getSession().persist(code);
+			DAOHelper.getInstance().getSession().getTransaction().commit();
 			
 			queryString = "?code=" + code.getAuthorization_code();
 		}
@@ -179,7 +179,7 @@ public final class OAuth2Helper { // Not inherit ...
 		OAuthClient client = null;
 		
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			die = true;
 			queryString = "#error=" + OAuth2Error.INVALID_CLIENT;
@@ -194,7 +194,7 @@ public final class OAuth2Helper { // Not inherit ...
 		
 		if(!die) {
 			try {
-				user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+				user = (User) DAOHelper.getInstance().getSession().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
 			}catch(Exception e) {
 				die = true;
 				e.printStackTrace(); // For log
@@ -207,7 +207,7 @@ public final class OAuth2Helper { // Not inherit ...
 			OAuthAccessToken token = null;
 			boolean generateNewToken = false;
 			try {
-				token = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+				token = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 						setParameter("_c", client.getClient_id()).
 						setParameter("_s", scope).
 						setParameter("_u", user.getId()).
@@ -232,9 +232,9 @@ public final class OAuth2Helper { // Not inherit ...
 				token.setUser(user);
 				token.setScope(scope);
 				
-				DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-				DAOHelper.getInstance().getEntityManager().persist(token);
-				DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+				DAOHelper.getInstance().getSession().beginTransaction();
+				DAOHelper.getInstance().getSession().persist(token);
+				DAOHelper.getInstance().getSession().getTransaction().commit();
 			}
 			
 			queryString = "#token=" + token.getAccess_token();
@@ -253,7 +253,7 @@ public final class OAuth2Helper { // Not inherit ...
 	public static Object swapCodeByToken(String code, String client_id, String client_secret, String redirect_uri) {
 		OAuthorizationCode authorizationCode = null;
 		try {
-			authorizationCode = (OAuthorizationCode) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthorizationCode t where t.authorization_code = :_c").setParameter("_c", code).getSingleResult();
+			authorizationCode = (OAuthorizationCode) DAOHelper.getInstance().getSession().createQuery("select t from OAuthorizationCode t where t.authorization_code = :_c").setParameter("_c", code).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace(); 
 			return new Error(OAuth2Error.INVALID_AUTHORIZATION_CODE.name(), OAuth2Error.INVALID_AUTHORIZATION_CODE.getDescription());
@@ -266,7 +266,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 		OAuthClient client = null;
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			return new Error(OAuth2Error.INVALID_CLIENT.name(), OAuth2Error.INVALID_CLIENT.getDescription());
 		}
@@ -279,14 +279,14 @@ public final class OAuth2Helper { // Not inherit ...
 		OAuthAccessToken accessToken = null;
 		OAuthRefreshToken refreshToken = null;
 		try {
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 					setParameter("_c", authorizationCode.getAuthClient().getClient_id()).
 					setParameter("_s", authorizationCode.getScope()).
 					setParameter("_u", authorizationCode.getUser().getId()).
 					setMaxResults(1).
 					getSingleResult();
 			
-			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthRefreshToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthRefreshToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 					setParameter("_c", authorizationCode.getAuthClient().getClient_id()).
 					setParameter("_s", authorizationCode.getScope()).
 					setParameter("_u", authorizationCode.getUser().getId()).
@@ -315,10 +315,10 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken.setExpires(generatetRefreshTokenExpires());
 		refreshToken.setScope(authorizationCode.getScope());
 		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(accessToken);
-		DAOHelper.getInstance().getEntityManager().persist(refreshToken);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+		DAOHelper.getInstance().getSession().beginTransaction();
+		DAOHelper.getInstance().getSession().persist(accessToken);
+		DAOHelper.getInstance().getSession().persist(refreshToken);
+		DAOHelper.getInstance().getSession().getTransaction().commit();
 		
 		return generateOAuth2Token(accessToken, refreshToken);
 	}
@@ -327,18 +327,17 @@ public final class OAuth2Helper { // Not inherit ...
 	public static Object resourceOwnerPasswordGrant(String username, String password, String client_id, String client_secret, String scope) { 
 		User user = null;
 		try {
-			user = (User) DAOHelper.getInstance().getEntityManager().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
+			user = (User) DAOHelper.getInstance().getSession().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace(); // For log
 			return new Error(OAuth2Error.INVALID_USER.name(), OAuth2Error.INVALID_USER.getDescription());
 		}
-		System.out.println(user);
 		if(!user.getPass_hash().equals(password))
 			return new Error(OAuth2Error.INVALID_USER_CREDENTIALS.name(), OAuth2Error.INVALID_USER_CREDENTIALS.getDescription());
 		
 		OAuthClient client = null;
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return new Error(OAuth2Error.INVALID_CLIENT.name(), OAuth2Error.INVALID_CLIENT.getDescription());
@@ -352,14 +351,14 @@ public final class OAuth2Helper { // Not inherit ...
 		OAuthAccessToken accessToken = null;
 		OAuthRefreshToken refreshToken = null;
 		try { // reuse existing token 
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 					setParameter("_c",client.getClient_id()).
 					setParameter("_s", (scope == null || scope.isEmpty() ? client.getScope() : scope)).
 					setParameter("_u", user.getId()).
 					setMaxResults(1).
 					getSingleResult();
 			
-			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthRefreshToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthRefreshToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 					setParameter("_c", client.getClient_id()).
 					setParameter("_s", accessToken.getScope()).
 					setParameter("_u", user.getId()).
@@ -388,10 +387,10 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken.setExpires(generatetRefreshTokenExpires());
 		refreshToken.setScope(accessToken.getScope());
 		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(accessToken);
-		DAOHelper.getInstance().getEntityManager().persist(refreshToken);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+		DAOHelper.getInstance().getSession().beginTransaction();
+		DAOHelper.getInstance().getSession().persist(accessToken);
+		DAOHelper.getInstance().getSession().persist(refreshToken);
+		DAOHelper.getInstance().getSession().getTransaction().commit();
 		
 		return generateOAuth2Token(accessToken, refreshToken);
 	}
@@ -400,7 +399,7 @@ public final class OAuth2Helper { // Not inherit ...
 	public static Object clientCredentialsGrant(String client_id, String client_secret, String scope) {
 		OAuthClient client = null;
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return new Error(OAuth2Error.INVALID_CLIENT.name(), OAuth2Error.INVALID_CLIENT.getDescription());
@@ -414,7 +413,7 @@ public final class OAuth2Helper { // Not inherit ...
 		OAuthAccessToken accessToken = null;
 		/** Reuse existing token if it is alive ... **/
 		try {
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where t.scope = :_s and t.authClient.client_id = :_c and t.user.id = :_u ORDER BY t.id desc").
 					setParameter("_c",client.getClient_id()).
 					setParameter("_s", (scope == null || scope.isEmpty() ? client.getScope() : scope)).
 					setParameter("_u",client.getUser().getId()).
@@ -436,9 +435,9 @@ public final class OAuth2Helper { // Not inherit ...
 		accessToken.setUser(client.getUser());
 		accessToken.setScope((scope == null || scope.isEmpty() ? client.getScope() : scope));
 		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(accessToken);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+		DAOHelper.getInstance().getSession().beginTransaction();
+		DAOHelper.getInstance().getSession().persist(accessToken);
+		DAOHelper.getInstance().getSession().getTransaction().commit();
 		
 		return generateOAuth2Token(accessToken);
 	}
@@ -449,7 +448,7 @@ public final class OAuth2Helper { // Not inherit ...
 		
 		OAuthRefreshToken refreshToken = null;
 		try {
-			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthRefreshToken t where t.refresh_token = :_r").setParameter("_r", refresh_token).getSingleResult();
+			refreshToken = (OAuthRefreshToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthRefreshToken t where t.refresh_token = :_r").setParameter("_r", refresh_token).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return new Error(OAuth2Error.INVALID_REFRESH_TOKEN.name(), OAuth2Error.INVALID_REFRESH_TOKEN.getDescription());
@@ -459,7 +458,7 @@ public final class OAuth2Helper { // Not inherit ...
 		
 		OAuthAccessToken accessToken = null;
 		try {
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where t.authClient.client_id = :_c and t.user.id = :_u and t.scope = :_s ORDER BY t.id desc").
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where t.authClient.client_id = :_c and t.user.id = :_u and t.scope = :_s ORDER BY t.id desc").
 					setMaxResults(1).
 					setParameter("_c", refreshToken.getAuthClient().getClient_id()).
 					setParameter("_u", refreshToken.getUser().getId()).
@@ -472,7 +471,7 @@ public final class OAuth2Helper { // Not inherit ...
 		
 		OAuthClient client = null;
 		try {
-			client = (OAuthClient) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
+			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return new Error(OAuth2Error.INVALID_CLIENT.name(), OAuth2Error.INVALID_CLIENT.getDescription());
@@ -497,10 +496,10 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken_.setExpires(generatetRefreshTokenExpires());
 		refreshToken_.setScope(accessToken_.getScope());
 		
-		DAOHelper.getInstance().getEntityManager().getTransaction().begin();
-		DAOHelper.getInstance().getEntityManager().persist(accessToken_);
-		DAOHelper.getInstance().getEntityManager().persist(refreshToken_);
-		DAOHelper.getInstance().getEntityManager().getTransaction().commit();
+		DAOHelper.getInstance().getSession().beginTransaction();
+		DAOHelper.getInstance().getSession().persist(accessToken_);
+		DAOHelper.getInstance().getSession().persist(refreshToken_);
+		DAOHelper.getInstance().getSession().getTransaction().commit();
 		
 		return generateOAuth2Token(accessToken_, refreshToken_);
 	}
@@ -559,7 +558,9 @@ public final class OAuth2Helper { // Not inherit ...
 		token.setAccess_token(accessToken.getAccess_token());
 		token.setExpires_in(Integer.parseInt(getExpiresIn(accessToken)));
 		token.setRefresh_token(refreshToken.getRefresh_token());
-		token.setToken_type(DEFAULT_TOKEN_TYPE);
+		synchronized (DEFAULT_TOKEN_TYPE) {
+			token.setToken_type(DEFAULT_TOKEN_TYPE);
+		}
 	return token;
 	}
 	// overload
@@ -567,16 +568,20 @@ public final class OAuth2Helper { // Not inherit ...
 		Token token = new Token();
 		token.setAccess_token(accessToken.getAccess_token());
 		token.setExpires_in(Integer.parseInt(getExpiresIn(accessToken)));
-		token.setToken_type(DEFAULT_TOKEN_TYPE);
+		synchronized (DEFAULT_TOKEN_TYPE) {
+			token.setToken_type(DEFAULT_TOKEN_TYPE);
+		}
 	return token;
 	}
 	
 	public static boolean isValidToken(String token, String scope /* A single scope */) {
 		if(token == null || token.isEmpty()) return false;
-		token = token.replaceFirst(DEFAULT_TOKEN_TYPE + " ", ""); 
+		synchronized (DEFAULT_TOKEN_TYPE) {
+			token = token.replaceFirst(DEFAULT_TOKEN_TYPE + " ", ""); 
+		}
 		OAuthAccessToken accessToken = null;
 		try {
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getEntityManager().createQuery("select t from OAuthAccessToken t where access_token = :_t ORDER BY t.id desc").
+			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where access_token = :_t ORDER BY t.id desc").
 					setMaxResults(1).setParameter("_t", token).getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();

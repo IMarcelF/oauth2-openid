@@ -34,7 +34,7 @@ public class OAuth2 {
 				@QueryParam("scope")@DefaultValue("") String scope,
 				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri,
 				@QueryParam("authorize")@DefaultValue("") String authorize
-			){ DAOHelper.getInstance().getEntityManager();
+			){ 
 		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize);
 	}
 	

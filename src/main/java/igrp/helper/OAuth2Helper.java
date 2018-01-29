@@ -111,6 +111,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 response_type=code
 	public static Response authorizationCodeGrant(String client_id, String scope, String redirect_uri) {
+		DAOHelper.getInstance().getSession().beginTransaction();
 		String username = "demo"; // eliminar
 		String url = "";
 		String queryString = "";
@@ -152,7 +153,6 @@ public final class OAuth2Helper { // Not inherit ...
 			code.setExpires(generateCodeExpires());
 			code.setScope(scope);
 			
-			DAOHelper.getInstance().getSession().beginTransaction();
 			DAOHelper.getInstance().getSession().persist(code);
 			DAOHelper.getInstance().getSession().getTransaction().commit();
 			
@@ -171,6 +171,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 response_type=token & grant_type=implicit
 	public static Object implicitGrant(String client_id, String scope, String redirect_uri) {
+		DAOHelper.getInstance().getSession().beginTransaction();
 		String username = "demo"; // Eliminar
 		String url = "";
 		String queryString = "";
@@ -232,7 +233,7 @@ public final class OAuth2Helper { // Not inherit ...
 				token.setUser(user);
 				token.setScope(scope);
 				
-				DAOHelper.getInstance().getSession().beginTransaction();
+				
 				DAOHelper.getInstance().getSession().persist(token);
 				DAOHelper.getInstance().getSession().getTransaction().commit();
 			}
@@ -251,6 +252,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 grant_type=authorization_code 
 	public static Object swapCodeByToken(String code, String client_id, String client_secret, String redirect_uri) {
+		DAOHelper.getInstance().getSession().beginTransaction();
 		OAuthorizationCode authorizationCode = null;
 		try {
 			authorizationCode = (OAuthorizationCode) DAOHelper.getInstance().getSession().createQuery("select t from OAuthorizationCode t where t.authorization_code = :_c").setParameter("_c", code).getSingleResult();
@@ -315,7 +317,7 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken.setExpires(generatetRefreshTokenExpires());
 		refreshToken.setScope(authorizationCode.getScope());
 		
-		DAOHelper.getInstance().getSession().beginTransaction();
+		
 		DAOHelper.getInstance().getSession().persist(accessToken);
 		DAOHelper.getInstance().getSession().persist(refreshToken);
 		DAOHelper.getInstance().getSession().getTransaction().commit();
@@ -325,6 +327,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 grant_type=password
 	public static Object resourceOwnerPasswordGrant(String username, String password, String client_id, String client_secret, String scope) { 
+		DAOHelper.getInstance().getSession().beginTransaction();
 		User user = null;
 		try {
 			user = (User) DAOHelper.getInstance().getSession().createQuery("select t from User t where t.user_name = :_u").setParameter("_u", username).getSingleResult();
@@ -387,7 +390,7 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken.setExpires(generatetRefreshTokenExpires());
 		refreshToken.setScope(accessToken.getScope());
 		
-		DAOHelper.getInstance().getSession().beginTransaction();
+		
 		DAOHelper.getInstance().getSession().persist(accessToken);
 		DAOHelper.getInstance().getSession().persist(refreshToken);
 		DAOHelper.getInstance().getSession().getTransaction().commit();
@@ -397,6 +400,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 grant_type=client_credentials
 	public static Object clientCredentialsGrant(String client_id, String client_secret, String scope) {
+		DAOHelper.getInstance().getSession().beginTransaction();
 		OAuthClient client = null;
 		try {
 			client = (OAuthClient) DAOHelper.getInstance().getSession().createQuery("select t from OAuthClient t where t.client_id = :_c").setParameter("_c", client_id).getSingleResult();
@@ -435,7 +439,6 @@ public final class OAuth2Helper { // Not inherit ...
 		accessToken.setUser(client.getUser());
 		accessToken.setScope((scope == null || scope.isEmpty() ? client.getScope() : scope));
 		
-		DAOHelper.getInstance().getSession().beginTransaction();
 		DAOHelper.getInstance().getSession().persist(accessToken);
 		DAOHelper.getInstance().getSession().getTransaction().commit();
 		
@@ -444,6 +447,7 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	// OAuth2 grant_type=refresh_token
 	public static Object refreshToken(String refresh_token, String scope, String client_id, String client_secret) {
+		DAOHelper.getInstance().getSession().beginTransaction();
 		Object result = null;
 		
 		OAuthRefreshToken refreshToken = null;
@@ -496,7 +500,6 @@ public final class OAuth2Helper { // Not inherit ...
 		refreshToken_.setExpires(generatetRefreshTokenExpires());
 		refreshToken_.setScope(accessToken_.getScope());
 		
-		DAOHelper.getInstance().getSession().beginTransaction();
 		DAOHelper.getInstance().getSession().persist(accessToken_);
 		DAOHelper.getInstance().getSession().persist(refreshToken_);
 		DAOHelper.getInstance().getSession().getTransaction().commit();

@@ -19,6 +19,9 @@ public class DAOHelper {// Singleton class
 	}
 	
 	public Session getSession() {
+		Session s = this.sf.getCurrentSession();
+		if(s != null)
+			return s;
 		return this.sf.openSession();
 	}
 	

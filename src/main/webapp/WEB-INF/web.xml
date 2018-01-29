@@ -43,5 +43,5 @@
   -->
   <listener>
   	<listener-class>igrp.listener.DAOHelperListener</listener-class>
-  </listener>
+  </listener> 
 </web-app>

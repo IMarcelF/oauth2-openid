@@ -30,24 +30,21 @@ public class User {
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response getUser(@PathParam(value = "id") String id, @HeaderParam(value = "Authorization") String token) {
 		
+		DAOHelper.getInstance().getSession().beginTransaction();
+		
 		if(!OAuth2Helper.isValidToken(token, Scope.USER_READ + "")) 
 			return Response.status(OAuth2Error.INVALID_GRANT.getStatus()).entity(new GenericResourceBuilder(false, new Error("" + OAuth2Error.INVALID_GRANT.getStatus(), OAuth2Error.INVALID_GRANT.getDescription())).build()).build(); 
 		
 		igrp.resource.User user = null;
-                EntityManager em = DAOHelper.getInstance().getSession();
 		try {
-			user = (igrp.resource.User) em.createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
+			user = (igrp.resource.User)  DAOHelper.getInstance().getSession().createQuery("select t from User t where t.user_name = :_u or t.email = :_m")
 			 .setParameter("_u", id).setParameter("_m", id)
 			 .setMaxResults(1)
 			 .getSingleResult();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return Response.status(500).entity(new GenericResourceBuilder(false, new Error("Exception_Occured", "The resource não foi encontrado.")).build()).build();
-		}finally{
-                    if(em != null){
-                        em.close();
-                    }
-                }
+		}
 		if(user == null) 
 			return Response.status(404).entity(new GenericResourceBuilder(false, new Error("404", "Resource not found.")).build()).build();
 		

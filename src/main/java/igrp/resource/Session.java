@@ -11,10 +11,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Iekiny Marcel
  * Jan 23, 2018
  */
+@XmlRootElement
 @Entity
 @Table(name="tbl_session")
 public class Session implements Serializable{

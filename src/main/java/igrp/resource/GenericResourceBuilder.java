@@ -2,10 +2,13 @@ package igrp.resource;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * Iekiny Marcel
  * Jan 23, 2018
  */
+@XmlRootElement
 public final class GenericResourceBuilder implements Serializable{ // Not inherit ... 
 	
 	private GenericResource gr;

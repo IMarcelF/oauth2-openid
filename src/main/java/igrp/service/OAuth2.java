@@ -1,19 +1,20 @@
 package igrp.service;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.servlet.http.HttpServletRequest;
+import javax.swing.JOptionPane;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
-
-import igrp.helper.DAOHelper;
 import igrp.helper.OAuth2Helper;
 import igrp.oauth2.util.OAuth2Error;
 import igrp.resource.oauth2.Error;
@@ -33,9 +34,13 @@ public class OAuth2 {
 				@QueryParam("client_id") String client_id,
 				@QueryParam("scope")@DefaultValue("") String scope,
 				@QueryParam("redirect_uri")@DefaultValue("") String redirect_uri,
-				@QueryParam("authorize")@DefaultValue("") String authorize
-			){ 
-		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize);
+				@QueryParam("authorize")@DefaultValue("") String authorize,
+				@QueryParam("userId")@DefaultValue("") String userId,
+				@QueryParam("state")@DefaultValue("") String state,
+				@Context HttpServletRequest request
+			){
+		String url = request.getRequestURL().toString().replace(request.getRequestURI() + "", "");
+		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize, url, userId);
 	}
 	
 	/**
@@ -80,4 +85,15 @@ public class OAuth2 {
 		}
 		return Response.status(200).entity(result).build();
 	}
+	
+	/**
+	 For OAuth2-OpenId user endpoint purpose ... 
+	 * */
+	@GET
+	@Path("/userinfo")
+	public Response userInfo(@HeaderParam(value = "Authorization") String token){
+		
+		return null;
+	}
+	
 }

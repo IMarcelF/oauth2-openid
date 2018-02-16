@@ -4,6 +4,13 @@ package igrp.oauth2.util;
  * Jan 23, 2018
  */
 public enum Scope {
+	
+	OPENID("openid", "For OpenId Connect"),
+	EMAIL("email", "For OpenId Connect (Optional Scope)."),
+	PROFILE("profile", "For OpenId Connect (Optional Scope)."),
+	ADDRESS("address", "For OpenId Connect (Optional Scope)."),
+	PHONE("phone", "For OpenId Connect (Optional Scope)."),
+	OFFLINE_ACCESS("offline_access", "For OpenId Connect (Optional Scope)."),
 
 	LOGIN("login", "Description of the scope"),
 	SESSION_READ("session:read", "Description of the scope"),

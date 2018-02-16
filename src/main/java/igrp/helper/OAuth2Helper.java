@@ -4,12 +4,18 @@ import java.net.URISyntaxException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.security.Key;
+import java.util.Base64;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.core.Response;
 
 import org.hibernate.Transaction;
 
 import igrp.oauth2.util.OAuth2Error;
+import igrp.oauth2.util.Scope;
 import igrp.resource.User;
 import igrp.resource.oauth2.Error;
 import igrp.resource.oauth2.OAuthAccessToken;
@@ -18,6 +24,10 @@ import igrp.resource.oauth2.OAuthRefreshToken;
 import igrp.resource.oauth2.OAuthorizationCode;
 import igrp.resource.oauth2.PostData;
 import igrp.resource.oauth2.Token;
+import igrp.resource.openid.Jwt;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.crypto.MacProvider;
 /**
  * @author Marcel Iekiny
  * Oct 4, 2017
@@ -33,26 +43,37 @@ public final class OAuth2Helper { // Not inherit ...
 	
 	/** A set of public static methods ... **/
 	// Proccess all oauth2 GET request 
-	public static Object doGet(String client_id, String response_type, String scope, String redirect_uri, String authorize) {
+	public static Object doGet(String client_id, String response_type, String scope, String redirect_uri, String authorize, String url, String userId) {
 		/** Go to https://tools.ietf.org/html/rfc6749#section-3.3 for more details 
-		 *  Anyway, you can use scope as list of string separate by comma too
+		 *  Anyway, you can use scope as list of string separate by comma too 
 		 */
 		scope = scope.replaceAll("(\\s|%20)", ",");
 		/***/
-		String url = OAuth2Helper.idpUrl + "&oauth=1";
+		if(url == null || url.isEmpty())
+			url = new String(OAuth2Helper.idpUrl) + "&oauth=1";
+		else
+			url += "/IGRP/webapps?r=igrp/login/login" + "&oauth=1";
+		
 		if(response_type == null || response_type.isEmpty()) {
 			return Response.status(400).build();
 		}
+		
+		try {
+			userId = new String(Base64.getDecoder().decode(userId));
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
 		switch(response_type) {
 		
 			case "code": 
 				if(authorize != null && !authorize.isEmpty())
-					return authorizationCodeGrant(client_id, scope, redirect_uri);
+					return authorizationCodeGrant(client_id, scope, redirect_uri, userId);
 				
 			case "token":
 				
 				if(authorize != null && !authorize.isEmpty())
-					return implicitGrant(client_id, scope, redirect_uri);
+					return implicitGrant(client_id, scope, redirect_uri, userId);
 				
 				url += (response_type != null && !response_type.isEmpty() ? "&response_type=" + response_type : "");
 				url += (client_id != null && !client_id.isEmpty() ? "&client_id=" + client_id : "");
@@ -112,9 +133,9 @@ public final class OAuth2Helper { // Not inherit ...
 	}
 	
 	// OAuth2 response_type=code
-	public static Response authorizationCodeGrant(String client_id, String scope, String redirect_uri) {
+	public static Response authorizationCodeGrant(String client_id, String scope, String redirect_uri, String username) {
 		Transaction t = DAOHelper.getInstance().getSession().beginTransaction();
-		String username = "demo"; // eliminar
+		//String username = "demo"; // eliminar
 		String url = "";
 		String queryString = "";
 		boolean die = false;
@@ -128,7 +149,7 @@ public final class OAuth2Helper { // Not inherit ...
 			queryString = "?error=" + OAuth2Error.INVALID_CLIENT;
 			e.printStackTrace();
 		}
-		url += (client == null || (redirect_uri != null && !redirect_uri.isEmpty()) ? redirect_uri : client.getRedirect_uri());
+		url += (client == null || (redirect_uri != null && !redirect_uri.trim().isEmpty()) ? redirect_uri : client.getRedirect_uri().trim());
 		
 		if(!die && client != null && !validateScope(scope, client)) {
 			queryString = "?error=" + OAuth2Error.INVALID_SCOPE;
@@ -172,9 +193,10 @@ public final class OAuth2Helper { // Not inherit ...
 	}
 	
 	// OAuth2 response_type=token & grant_type=implicit
-	public static Object implicitGrant(String client_id, String scope, String redirect_uri) {
+	public static Object implicitGrant(String client_id, String scope, String redirect_uri, String userId) {
 		Transaction t = DAOHelper.getInstance().getSession().beginTransaction();
-		String username = "demo"; // Eliminar
+		//String username = "demo"; // Eliminar 
+		String username = userId;
 		String url = "";
 		String queryString = "";
 		boolean die = false;
@@ -265,7 +287,7 @@ public final class OAuth2Helper { // Not inherit ...
 		if(authorizationCode.getExpires().compareTo(System.currentTimeMillis() + "") <= 0)
 			return new Error(OAuth2Error.INVALID_AUTHORIZATION_CODE.name(), OAuth2Error.INVALID_AUTHORIZATION_CODE.getDescription());
 		
-		if(authorizationCode.getRedirect_uri() != null && !authorizationCode.getRedirect_uri().equals(redirect_uri))
+		if(authorizationCode.getRedirect_uri() != null && !authorizationCode.getRedirect_uri().trim().isEmpty() && !authorizationCode.getRedirect_uri().equals(redirect_uri))
 			return new Error(OAuth2Error.INVALID_REDIRECT_URI.name(), OAuth2Error.INVALID_REDIRECT_URI.getDescription());
 	
 		OAuthClient client = null;
@@ -297,8 +319,15 @@ public final class OAuth2Helper { // Not inherit ...
 					setMaxResults(1).
 					getSingleResult();
 			
-			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0)
+			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0) {
+				
+				/** OpenId implementation begin **/
+				if(isOpenIdDefaultScopes(authorizationCode.getScope())) 
+					return generateOpenIdToken(accessToken, refreshToken, authorizationCode.getScope());
+				/** OpenId implementation end **/
+				
 				return generateOAuth2Token(accessToken, refreshToken);
+			}
 			
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -323,6 +352,11 @@ public final class OAuth2Helper { // Not inherit ...
 		DAOHelper.getInstance().getSession().persist(accessToken);
 		DAOHelper.getInstance().getSession().persist(refreshToken);
 		t.commit();
+		
+		/** OpenId implementation begin **/
+		if(isOpenIdDefaultScopes(authorizationCode.getScope())) 
+			return generateOpenIdToken(accessToken, refreshToken, authorizationCode.getScope());
+		/** OpenId implementation end **/
 		
 		return generateOAuth2Token(accessToken, refreshToken);
 	}
@@ -566,6 +600,15 @@ public final class OAuth2Helper { // Not inherit ...
 		}
 	return token;
 	}
+	
+	private static igrp.resource.openid.Token generateOpenIdToken(OAuthAccessToken accessToken, OAuthRefreshToken refreshToken, String openIdScopes){
+		igrp.resource.openid.Token t = new igrp.resource.openid.Token(generateOAuth2Token(accessToken, refreshToken));
+		Jwt jwt = new Jwt();
+		jwt.setSub(accessToken.getUser().getUser_name());
+		t.setId_token(generateJwt(openIdScopes, jwt));
+		return t;
+	}
+	
 	// overload
 	private static Token generateOAuth2Token(OAuthAccessToken accessToken) {
 		Token token = new Token();
@@ -577,15 +620,58 @@ public final class OAuth2Helper { // Not inherit ...
 	return token;
 	}
 	
+	private static String generateJwt(String openIdScopes, Jwt j) {
+		String jwt = "PUT_JWT_HERE";
+		// We need a signing key, so we'll create one just for this example. Usually
+    	// the key would be read from your application configuration instead.
+    	Key key = MacProvider.generateKey();
+    	// https://github.com/jwtk/jjwt
+    	//System.out.println(new String(key.getFormat()));
+    	jwt = Jwts.builder()
+    	  .setSubject(j.getSub())
+    	  .signWith(SignatureAlgorithm.HS512, key)
+    	  .compact();
+		
+		return jwt;
+	}
+	
+	private static boolean isOpenIdDefaultScopes(String scopes) {
+		return scopes.contains(Scope.OPENID.getValue()) || scopes.contains(Scope.EMAIL.getValue()) || scopes.contains(Scope.PROFILE.getValue()) || scopes.contains(Scope.ADDRESS.getValue()) 
+				|| scopes.contains(Scope.PHONE.getValue()) || scopes.contains(Scope.OFFLINE_ACCESS.getValue());
+	}
+	
 	public static boolean isValidToken(String token, String scope /* A single scope */) {
+		return isValidToken(token, scope, null);
+	}
+	
+	public static boolean isValidToken(String token, String scope /* A single scope */, OAuthAccessToken returnToken) {
 		if(token == null || token.isEmpty()) return false;
 		synchronized (DEFAULT_TOKEN_TYPE) {
 			token = token.replaceFirst(DEFAULT_TOKEN_TYPE + " ", ""); 
 		}
 		OAuthAccessToken accessToken = null;
 		try {
-			accessToken = (OAuthAccessToken) DAOHelper.getInstance().getSession().createQuery("select t from OAuthAccessToken t where access_token = :_t ORDER BY t.id desc").
-					setMaxResults(1).setParameter("_t", token).getSingleResult();
+			CriteriaBuilder criteriaBuilder = DAOHelper.getInstance().getSession().getCriteriaBuilder();
+			CriteriaQuery<Object> criteriaQuery = criteriaBuilder.createQuery();
+			Root<OAuthAccessToken> u = criteriaQuery.from(OAuthAccessToken.class);
+			criteriaQuery.select(u).where(
+							criteriaBuilder.equal(u.get("access_token"), criteriaBuilder.parameter(String.class, "_t"))
+					);
+			criteriaQuery.orderBy(criteriaBuilder.desc(u.get("id")));
+			accessToken = (OAuthAccessToken)DAOHelper.getInstance().getSession().
+					createQuery(criteriaQuery).
+					setParameter("_t", token).
+					setMaxResults(1).
+					getSingleResult();
+			if(returnToken != null) {
+				returnToken.setAccess_token(accessToken.getAccess_token());
+				returnToken.setUser(accessToken.getUser());
+				returnToken.setId(accessToken.getId());
+				returnToken.setScope(accessToken.getScope());
+				returnToken.setAuthClient(accessToken.getAuthClient());
+				returnToken.setExpires(accessToken.getExpires());
+			}
+			
 		}catch(Exception e) {
 			e.printStackTrace();
 			return false;

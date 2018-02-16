@@ -1,9 +1,15 @@
 package igrp.resource;
+
+import java.io.Serializable;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * Marcel Iekiny
  * Sep 16, 2017
  */
-public class Error {
+@XmlRootElement
+public class Error implements Serializable{
 	
 	private String name;
 	private String message;

@@ -69,11 +69,17 @@ public final class OAuth2Helper { // Not inherit ...
 			case "code": 
 				if(authorize != null && !authorize.isEmpty())
 					return authorizationCodeGrant(client_id, scope, redirect_uri, userId);
-				
+			
+			case "id_token":
+				if(authorize != null && !authorize.isEmpty())
+					return implicitGrant(client_id, scope, redirect_uri, userId, 1);
+			case "id_token token":	
+				if(authorize != null && !authorize.isEmpty())
+					return implicitGrant(client_id, scope, redirect_uri, userId, 2);
 			case "token":
 				
 				if(authorize != null && !authorize.isEmpty())
-					return implicitGrant(client_id, scope, redirect_uri, userId);
+					return implicitGrant(client_id, scope, redirect_uri, userId, 0);
 				
 				url += (response_type != null && !response_type.isEmpty() ? "&response_type=" + response_type : "");
 				url += (client_id != null && !client_id.isEmpty() ? "&client_id=" + client_id : "");
@@ -109,7 +115,7 @@ public final class OAuth2Helper { // Not inherit ...
 		if(data.getGrant_type() != null)
 			switch(data.getGrant_type()) {
 			
-				case "authorization_code"://code, client_id, client_secret, redirect_uri
+				case "authorization_code":
 					result = swapCodeByToken(data.getCode(), data.getClient_id(), data.getClient_secret(), data.getRedirect_uri());
 				break;
 				
@@ -192,8 +198,11 @@ public final class OAuth2Helper { // Not inherit ...
 	return Response.status(400).build();
 	}
 	
-	// OAuth2 response_type=token & grant_type=implicit
-	public static Object implicitGrant(String client_id, String scope, String redirect_uri, String userId) {
+	// OAuth2 OpenId-Connect grant_type=implicit 
+	// openIdFlag == 0 -> OAuth2 response_type=token & grant_type=implicit 
+	// openIdFlag == 1 -> OAuth2 response_type=id_token%20token & grant_type=implicit 
+	// openIdFlag == 2 -> OAuth2 response_type=id_token & grant_type=implicit 
+	public static Object implicitGrant(String client_id, String scope, String redirect_uri, String userId, int openIdFlag) {
 		Transaction t = DAOHelper.getInstance().getSession().beginTransaction();
 		//String username = "demo"; // Eliminar 
 		String username = userId;
@@ -212,7 +221,9 @@ public final class OAuth2Helper { // Not inherit ...
 		}
 		url += (client == null || (redirect_uri != null && !redirect_uri.isEmpty()) ? redirect_uri : client.getRedirect_uri());
 		
-		if(!die && client != null && !validateScope(scope, client)) {
+		if((!die && client != null && !validateScope(scope, client)) 
+				|| (openIdFlag != 0 && !scope.contains(Scope.OPENID.getValue())) // "openid" scope is required in this case ... 
+				) {
 			queryString = "#error=" + OAuth2Error.INVALID_SCOPE;
 			die = true;
 		}
@@ -257,12 +268,24 @@ public final class OAuth2Helper { // Not inherit ...
 				token.setUser(user);
 				token.setScope(scope);
 				
-				
 				DAOHelper.getInstance().getSession().persist(token);
 				t.commit();
 			}
 			
-			queryString = "#token=" + token.getAccess_token();
+			if (openIdFlag != 0) {
+				Jwt jwt = new Jwt();
+				jwt.setSub(token.getUser().getUser_name());
+				String id_token = generateJwt(scope, jwt);
+				
+				if(openIdFlag == 1) { // Authentication and Authorization purpose 
+					synchronized (DEFAULT_TOKEN_TYPE) {
+						queryString = "#token=" + token.getAccess_token() + "&token_type=" + DEFAULT_TOKEN_TYPE.toLowerCase() + "&id_token=" + id_token;
+					}
+				}else { // openIdFlag == 2 -> Response with just id_token ... just for authentication 
+					queryString = "#id_token=" + id_token;
+				}
+			}else // Just OAuth 2.0 
+				queryString = "#token=" + token.getAccess_token();
 		}
 		
 		try {
@@ -287,7 +310,7 @@ public final class OAuth2Helper { // Not inherit ...
 		if(authorizationCode.getExpires().compareTo(System.currentTimeMillis() + "") <= 0)
 			return new Error(OAuth2Error.INVALID_AUTHORIZATION_CODE.name(), OAuth2Error.INVALID_AUTHORIZATION_CODE.getDescription());
 		
-		if(authorizationCode.getRedirect_uri() != null && !authorizationCode.getRedirect_uri().trim().isEmpty() && !authorizationCode.getRedirect_uri().equals(redirect_uri))
+		if(authorizationCode.getRedirect_uri() != null && !authorizationCode.getRedirect_uri().trim().isEmpty() && redirect_uri != null && !redirect_uri.trim().isEmpty() && !authorizationCode.getRedirect_uri().equals(redirect_uri))
 			return new Error(OAuth2Error.INVALID_REDIRECT_URI.name(), OAuth2Error.INVALID_REDIRECT_URI.getDescription());
 	
 		OAuthClient client = null;

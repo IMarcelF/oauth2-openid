@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.swing.JOptionPane;
 import javax.ws.rs.Consumes;
@@ -37,9 +38,16 @@ public class OAuth2 {
 				@QueryParam("authorize")@DefaultValue("") String authorize,
 				@QueryParam("userId")@DefaultValue("") String userId,
 				@QueryParam("state")@DefaultValue("") String state,
+				@QueryParam("nonce")@DefaultValue("") String nonce,
 				@Context HttpServletRequest request
 			){
 		String url = request.getRequestURL().toString().replace(request.getRequestURI() + "", "");
+		try {
+			Cookie []cookies = request.getCookies();
+			for(Cookie cookie : cookies)
+				System.out.println(cookie.getName() + " - " + cookie.getValue());
+		}catch(Exception e) {}
+		
 		return (Response) OAuth2Helper.doGet(client_id, response_type, scope, redirect_uri, authorize, url, userId);
 	}
 	

@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.security.Key;
 import java.util.Base64;
+import java.util.Base64.Encoder;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -72,16 +73,18 @@ public final class OAuth2Helper { // Not inherit ...
 			
 			case "id_token":
 				if(authorize != null && !authorize.isEmpty())
-					return implicitGrant(client_id, scope, redirect_uri, userId, 1);
-			case "id_token token":	
-				if(authorize != null && !authorize.isEmpty())
 					return implicitGrant(client_id, scope, redirect_uri, userId, 2);
+			case "id_token token":
+			case "token id_token":
+				if(authorize != null && !authorize.isEmpty())
+					return implicitGrant(client_id, scope, redirect_uri, userId, 1);
 			case "token":
 				
 				if(authorize != null && !authorize.isEmpty())
 					return implicitGrant(client_id, scope, redirect_uri, userId, 0);
 				
-				url += (response_type != null && !response_type.isEmpty() ? "&response_type=" + response_type : "");
+				url += (response_type != null && !response_type.isEmpty() ? "&response_type=" + response_type.replaceAll(" ", "%20") : "");
+		
 				url += (client_id != null && !client_id.isEmpty() ? "&client_id=" + client_id : "");
 			try {
 				url += (redirect_uri != null && !redirect_uri.isEmpty() ? "&redirect_uri=" + URLEncoder.encode(redirect_uri, "utf-8") : "");
@@ -427,8 +430,15 @@ public final class OAuth2Helper { // Not inherit ...
 					setMaxResults(1).
 					getSingleResult();
 			
-			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0)
-				return generateOAuth2Token(accessToken, refreshToken);
+			if(accessToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0 && refreshToken.getExpires().compareTo(System.currentTimeMillis() + "") > 0) {
+			
+			/** OpenId implementation begin **/
+			if(isOpenIdDefaultScopes(accessToken.getScope())) 
+				return generateOpenIdToken(accessToken, refreshToken, accessToken.getScope());
+			/** OpenId implementation end **/
+			
+			return generateOAuth2Token(accessToken, refreshToken);
+			}
 			
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -454,10 +464,15 @@ public final class OAuth2Helper { // Not inherit ...
 		DAOHelper.getInstance().getSession().persist(refreshToken);
 		t.commit();
 		
+		/** OpenId implementation begin **/
+		if(isOpenIdDefaultScopes(accessToken.getScope())) 
+			return generateOpenIdToken(accessToken, refreshToken, accessToken.getScope());
+		/** OpenId implementation end **/
+		
 		return generateOAuth2Token(accessToken, refreshToken);
 	}
 	
-	// OAuth2 grant_type=client_credentials
+	// OAuth2 grant_type=client_credentials 
 	public static Object clientCredentialsGrant(String client_id, String client_secret, String scope) {
 		Transaction t = DAOHelper.getInstance().getSession().beginTransaction();
 		OAuthClient client = null;
@@ -618,6 +633,11 @@ public final class OAuth2Helper { // Not inherit ...
 		token.setAccess_token(accessToken.getAccess_token());
 		token.setExpires_in(Integer.parseInt(getExpiresIn(accessToken)));
 		token.setRefresh_token(refreshToken.getRefresh_token());
+		try {
+			token.setScope(accessToken.getScope().replaceAll(",", " "));
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 		synchronized (DEFAULT_TOKEN_TYPE) {
 			token.setToken_type(DEFAULT_TOKEN_TYPE);
 		}
@@ -637,6 +657,11 @@ public final class OAuth2Helper { // Not inherit ...
 		Token token = new Token();
 		token.setAccess_token(accessToken.getAccess_token());
 		token.setExpires_in(Integer.parseInt(getExpiresIn(accessToken)));
+		try {
+			token.setScope(accessToken.getScope().replaceAll(",", " "));
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 		synchronized (DEFAULT_TOKEN_TYPE) {
 			token.setToken_type(DEFAULT_TOKEN_TYPE);
 		}
